@@ -30,6 +30,8 @@
 #include <optional>
 #include <string>
 #include <system_error>
+#include <iostream>
+#include <cstdlib> // std::getenv
 
 namespace cling {
 
@@ -59,6 +61,15 @@ namespace cling {
             std::string("--cuda-gpu-arch=sm_")
                 .append(std::to_string(m_CuArgs->smVersion)),
             "--cuda-device-only"};
+
+    // FIXME quick hack to add the cuda_wrappers as system include directory
+    const char* cling_dir = std::getenv("BUILD_DIR");
+    argv.insert(argv.end(), "-isystem");
+    auto cuda_wrappers_dir = std::string(cling_dir) + "/lib/clang/18/include/cuda_wrappers";
+    std::cout << "CUDA wrappers directory: " << cuda_wrappers_dir << std::endl;
+    argv.insert(argv.end(), cuda_wrappers_dir.c_str());
+    argv.push_back("-include");
+    argv.push_back("__clang_cuda_runtime_wrapper.h");
 
     addHeaderSearchPathFlags(argv, CI.getHeaderSearchOptsPtr());
 
